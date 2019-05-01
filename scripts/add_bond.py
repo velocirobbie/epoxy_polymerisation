@@ -1,5 +1,6 @@
 import json
 import numpy as np
+from forcefield.opls_reader import OPLS_Reader
 
 class MakeBond(object):
     def __init__(self,sim, change_data, 
@@ -22,7 +23,7 @@ class MakeBond(object):
                 self.new_connections[key] = {int(k):v for k,v in subdict.items()}
         else:
             self.new_connections = {'angles':{},'dihedrals':{}}
-        self.opls = OPLS_Reader('oplsaa.prm')
+        self.opls = OPLS_Reader('forcefield/oplsaa.prm')
 
         searching = True
         count = 0

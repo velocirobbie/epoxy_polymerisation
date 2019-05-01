@@ -26,7 +26,7 @@ dihedral_style opls
 
 improper_style harmonic 
 
-read_data crosslinked.data
+read_data minimized.data
 
 special_bonds lj/coul 0.0 0.0 1.0
 
@@ -50,7 +50,7 @@ fix     1 all npt temp 300.0 300.0 100.0 iso 1.0 1.0 1000.0
 
 run 500000
 
-write_data new_box.data
+write_data equilibrated.data
 
 
 

@@ -1,11 +1,11 @@
-from forcefield.opls_reader import OPLS_Reader
+from opls_reader import OPLS_Reader
 
 class Parameterise(object):
     def __init__(self, crystal, vdw_defs, new_connections):
         
         self.vdw_defs = vdw_defs
         crystal.vdw_defs = vdw_defs 
-        paramfile = 'oplsaa.prm'
+        paramfile = 'forcefield/oplsaa.prm'
         data = OPLS_Reader(paramfile)
         self.vdw_type = data.vdw_type
         self.bond_data = data.bond

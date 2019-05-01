@@ -2,3 +2,9 @@
 *data
 polyout
 nx.dat
+core
+*.lammpstrj
+log.lammps
+master.json
+new_connections.json
+vdw.json

@@ -17,22 +17,27 @@ python polymerisation.py n_cores inputfile
 
 n_cores = int(sys.argv[1])
 inputfile = str(sys.argv[2])
-#n_cores = '192'
-lammps_args = ['aprun', '-n', str(n_cores), 'lmp_xc30', '-in']
+vdw_defs = str(sys.argv[3])
+
+lammps_args = ['aprun', '-n', str(n_cores), 'lmp_xc30', '-in'] # default archer mpi archer args
+
 lammps_dir = 'lammps_inputs/'
+
 primary_amine      = json.load(open('configs/epoxy_amine1.json'))
 secondary_amine    = json.load(open('configs/epoxy_amine2.json'))
 close_unused_epoxy = json.load(open('configs/epoxy_close.json'))
 
+compress = True # do you want to run a lammps compression before crosslinking
+
 n_possible_bonds = 400 # if 100% crosslinking was achieved
-n_desired_bonds  = 320  # desired crosslink bonds before end
+crosslink_density = 0.80 # desired crosslink density
+n_desired_bonds  = int(n_possible_bonds * crosslink_density) # desired number of crosslink bonds
 
 bonds_per_loop = 20
 search_radius = 6
 
 outputfile = 'polyout'
 networkfile = 'nx.dat'
-vdw_defs = 'vdw.json'
 
 def react(sim, reaction_config, n_attempt_bonds, new_connections):
   makeBond = MakeBond(sim, reaction_config, 
@@ -42,10 +47,17 @@ def react(sim, reaction_config, n_attempt_bonds, new_connections):
                 outputfile = outputfile,
                 networkfile = networkfile)
   return makeBond.bonds_made, makeBond.new_connections
+  
+def timer(func):
+    start = time.time()
+    def wrapper(*args,**kwargs):
+        return func(*args,**kwargs)
+    end = time.time()
+    print 'Total wall time: ',end-start,'seconds'
+    return wrapper
 
+@timer
 def polymerise(reaction_config, n_attempt_bonds, filename):
-  start = time.time() # only needed for benchmarking
-
   sim = ReadLammpsData(filename)
 
   # If this is part of an itterative polymerisation, check if new connecions
@@ -65,11 +77,13 @@ def polymerise(reaction_config, n_attempt_bonds, filename):
   json.dump(sim.vdw_defs,open('vdw.json','w'))
   output = Writer(sim)
   output.write_lammps('crosslinked.data')
-  end = time.time()
-  print 'Total wall Time for crosslinking',end - start
   return n_new_bonds
 
 def loop_polymerise(reaction, bonds_made):
+  # crosslinks a file called 'to_be_crosslinked.data' as much as possible according to 
+  # specifiaction; outputs 'reacted.data'
+  assert(os.path.isfile('to_be_crosslinked.data'))
+
   while bonds_made < n_desired_bonds:
     diff = n_desired_bonds - bonds_made
     if diff < bonds_per_loop:
@@ -77,52 +91,63 @@ def loop_polymerise(reaction, bonds_made):
     else:
       n_attempt_bonds = bonds_per_loop
 
-    # Makes some crosslins on the minimized.data simulation, outputs crosslinked.data
-    n_new_bonds = polymerise(reaction, n_attempt_bonds, 'minimized.data')
+    # Makes some crosslins on the to_be_crosslinked.data simulation, outputs crosslinked.data
+    n_new_bonds = polymerise(reaction, n_attempt_bonds, 'to_be_crosslinked.data')
     bonds_made += n_new_bonds
-    subprocess.call(['rm','minimized.data']) # just to be safe
-
-    # Runs a lammps minimization on crosslinked.data, outputs minimized.data
-    return_code = subprocess.call(lammps_args + [lammps_dir+'in.minimize'])
-    if return_code:
-      print 'Compress failed';  sys.exit()
-    subprocess.call(['rm','crosslinked.data']) # just to be safe
+    
+    if n_new_bonds:
+      # Runs a lammps minimization on crosslinked.data, outputs minimized.data
+      return_code = subprocess.call(lammps_args + [lammps_dir+'in.minimize'])
+      if return_code:
+        print 'Compress failed';  sys.exit()
+    else:
+      # structure unchanged 
+      subprocess.call(['mv','crosslinked.data','minimized.data'])
 
     if (   (bonds_made == n_desired_bonds)
         or (n_new_bonds == 0)):
+      subprocess.call(['mv','minimized.data','reacted.data'])      
       break
-
+    else:
+      # more polymerisations to be done in this loop
+      subprocess.call(['mv','minimized.data','to_be_crosslinked.data'])      
+      
   return bonds_made
 
+# Main control sequence
 
-
-# compress random arrangement of monomers to atmospheric pressure
-subprocess.call(['cp',inputfile,'box.data']) # so in.compress reads the correct file
-return_code = subprocess.call(lammps_args + [lammps_dir+'in.compress'])
-if return_code:
-  print 'Compress failed';  sys.exit()
-subprocess.call(['cp','compressed.data','minimized.data']) # prepare lammps file for loop
-
-#subprocess.call(['cp',inputfile,'minimized.data']) # for testing
+if compress:
+  # compress monomers to atmospheric pressure
+  subprocess.call(['cp',inputfile,'box.data']) # so in.compress reads the correct file
+  return_code = subprocess.call(lammps_args + [lammps_dir+'in.compress'])
+  if return_code:
+    print 'Compress failed';  sys.exit()
+  subprocess.call(['cp','compressed.data','equilibrated.data']) # prepare lammps file for loop
+else:
+  subprocess.call(['cp',inputfile,'equilibrated.data'])
 
 bonds_made = 0
 loop = 0
 while bonds_made < n_desired_bonds:
   loop += 1
+  
+  subprocess.call(['mv','equilibrated.data','to_be_crosslinked.data'])
   bonds_made = loop_polymerise(primary_amine, bonds_made)
+
+  subprocess.call(['mv','reacted.data','to_be_crosslinked.data'])
   bonds_made = loop_polymerise(secondary_amine, bonds_made)
 
-  # Runs a lammps npt on minimized.data, outputs new_box.data
-  if loop < 5:
-    return_code = subprocess.call(lammps_args + [lammps_dir+'in.equil'])
-  else:
-    return_code = subprocess.call(lammps_args + [lammps_dir+'in.hot_equil'])
+  # Runs a lammps npt on reacted.data, outputs new_box.data
+  return_code = subprocess.call(lammps_args + [lammps_dir+'in.equil'])
   if return_code:
-    print 'Compress failed';  sys.exit()
+    print 'Equilibration failed',loop;  sys.exit()
   
-  subprocess.call(['cp','new_box.data',str(bonds_made)+'.data']) 
-  
-polymerise(close_unused_epoxy, n_possible_bonds, 'new_box.data')
-subprocess.call(lammps_args + [lammps_dir+'in.long_equil'])
-    
+polymerise(close_unused_epoxy, n_possible_bonds, 'equilibrated.data')
 
+return_code = subprocess.call(lammps_args + [lammps_dir+'in.minimize'])
+if return_code: print 'Equilibration failed',loop;  sys.exit()
+
+subprocess.call(lammps_args + [lammps_dir+'in.long_equil'])
+if return_code: print 'Equilibration failed',loop;  sys.exit()
+    
+subprocess.call(['mv','equilibrated.data','final.data'])

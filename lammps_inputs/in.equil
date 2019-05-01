@@ -26,7 +26,7 @@ dihedral_style opls
 
 improper_style harmonic 
 
-read_data minimized.data
+read_data reacted.data
 
 special_bonds lj/coul 0.0 0.0 1.0
 
@@ -46,10 +46,14 @@ thermo_style    custom step cpu temp press pe ke evdwl ecoul epair lx ly lz vol 
 
 thermo_modify   flush yes line multi format float %g format 3 %15.8g
 
+fix     1 all nvt temp 500.0 500.0 100.0 
+run 10000
+unfix 1
+
 fix     1 all npt temp 300.0 300.0 100.0 iso 1.0 1.0 1000.0
 run 50000
 
-write_data new_box.data
+write_data equilibrated.data
 
 
 
