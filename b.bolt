@@ -1,0 +1,32 @@
+#!/bin/bash --login
+#
+# Parallel script produced by bolt
+#        Resource: ARCHER (Cray XC30 (24-core per node))
+#    Batch system: PBSPro_select
+#
+# bolt is written by EPCC (http://www.epcc.ed.ac.uk)
+##PBS -q long
+#PBS -q short
+#PBS -r y
+#PBS -l select=8
+#PBS -N polymerise_test
+#PBS -A e283-sinclair
+##PBS -J 0-29
+#PBS -l walltime=0:20:0
+export PBS_O_WORKDIR=$(readlink -f $PBS_O_WORKDIR)
+
+# Switch to current working directory
+cd $PBS_O_WORKDIR
+module load lammps
+
+# Run the parallel program
+#aprun -n 192 lmp_xc30 -in in.test 
+
+module load python-compute/2.7.6
+module load pc-numpy
+
+rm polyout nx.dat vdw.json new_connections.json
+
+cp master.json vdw.json
+python polymerise.py 192 reactants.data 
+

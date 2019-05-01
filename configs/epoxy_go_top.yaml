@@ -1,0 +1,17 @@
+atoms:
+    18:              # (13) CH2O 
+        vdw: 124
+        charge: 0.14 
+    4:             
+        vdw: 122   # (44) O Ether
+        charge: -0.37
+
+neighbours:
+    85: 
+        vdw: 127    # H-C-O Alkylether
+        charge: 0.03
+    101:
+        vdw: 126    # CR3-O-C 
+        charge: 0.17
+    
+    

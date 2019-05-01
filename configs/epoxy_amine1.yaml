@@ -1,0 +1,19 @@
+atoms:
+    7:              # (13) CH2N 
+        vdw: 737
+        charge: 0.14 
+    14:             
+        vdw: 731   # (44) N secondary
+        charge: -0.78
+
+neighbours:
+    739: 
+        vdw: 740    #  HNR2
+        charge: 0.38
+    742:  
+        vdw: 744  # CHR2-N
+        charge: 0.08
+    85:              
+        vdw: 741    #741 H-C-N
+        charge: 0.06  
+
