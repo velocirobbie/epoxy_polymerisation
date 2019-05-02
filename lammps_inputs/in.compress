@@ -44,6 +44,8 @@ fix     avlength all   ave/time 10 1000 10000 v_boxlength
 variable mylength   equal "f_avlength"
 thermo_style    custom step cpu temp press pe ke evdwl ecoul epair lx ly lz vol pxx pyy pzz pxy pxz pyz v_mylength
 thermo_modify   flush yes line multi format float %g format 3 %15.8g ######
+thermo 10000
+
 
 run 30000
 
