@@ -5,7 +5,8 @@ from forcefield.opls_reader import OPLS_Reader
 class MakeBond(object):
     def __init__(self,sim, change_data, 
             new_connections=False,
-            search_radius = 6, outputfile=0, networkfile=0, Nbonds=20):
+            search_radius = 6, mask_radius = 20,
+             outputfile=0, networkfile=0, Nbonds=20):
 
         self.sim = sim
         self.a1  = int(change_data['atoms'].keys()[0])
@@ -27,26 +28,55 @@ class MakeBond(object):
 
         searching = True
         count = 0
+        coords_of_bonds_made = np.empty((0,3))
         while searching:
+            print '===new search===='
+            
+            # setup mapping from atom ids to array index
             self.ids2index = np.zeros((max(sim.ids+1)),dtype=int)
             for i in range(len(sim.ids)):
                 self.ids2index[sim.ids[i]] = i
 
-            #print '===new search===='
-            
-            found = False
+            # calculate NxM distance**2 matrix between types a and b
             all1, xyz1 = self.find_all_atoms_with_type(self.a1)
             all2, xyz2 = self.find_all_atoms_with_type(self.a2)
-            if len(all1) == 0 or len(all2) == 0: break
+            if len(all1) == 0 or len(all2) == 0: break # no possible bonds left to make
+            print 'type1: ',len(all1),' type2: ',len(all2)
             distances = self.calc_distance_matrix(xyz1,xyz2)
-            min_dist = distances.min()
-            if min_dist < self.r2:
+
+            found = False
+            mask = np.ones(np.shape(distances), dtype=bool)
+            while not found:
+                min_dist = distances[np.where(mask==True)].min()
+                if min_dist > self.r2: break # all possible bonds are now too far apart
+                print 'dist: ',np.sqrt(min_dist)
                 i,j = np.where( distances == min_dist )
+                i_distances = self.calc_distance_matrix(xyz1[i], coords_of_bonds_made)
+                j_distances = self.calc_distance_matrix(xyz2[j], coords_of_bonds_made)
+
+                if (   np.all(i_distances > mask_radius**2) 
+                    or np.all(j_distances > mask_radius**2)):
+                    found = True
+                else:
+                    mask[i,j] = False
+                    print 'nearby: ', np.sqrt(i_distances.min()), ' ', np.sum(mask)
+                    if np.sum(mask) == 0: break # all possible bonds have been checked
+    
+            if found:
                 a,b = all1[int(i)], all2[int(j)]
+                if (self.sim.atom_labels[a] != self.a1 and
+                        self.sim.atom_labels[b] != self.b1): raise Exception
+                #print sim.atom_labels[a], sim.atom_labels[b], a,b 
+                #print sim.molecules[a], sim.molecules[b]
+                #print self.find_neighbours(a), self.find_neighbours(b)
+
                 self.make_bond(self.sim,a,b)
+
+                coords_of_bonds_made = np.vstack((coords_of_bonds_made, xyz1[i], xyz2[j]))
                 count += 1
                 found = True
-                
+
+
             if count >= Nbonds: searching = False
             if not found: searching = False
         

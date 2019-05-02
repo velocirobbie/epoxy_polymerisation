@@ -35,6 +35,7 @@ n_desired_bonds  = int(n_possible_bonds * crosslink_density) # desired number of
 
 bonds_per_loop = 20
 search_radius = 6
+mask_radius = 20
 
 outputfile = 'polyout'
 networkfile = 'nx.dat'
@@ -45,7 +46,8 @@ def react(sim, reaction_config, n_attempt_bonds, new_connections):
                 new_connections=new_connections,
                 search_radius = search_radius,
                 outputfile = outputfile,
-                networkfile = networkfile)
+                networkfile = networkfile,
+                mask_radius = mask_radius)
   return makeBond.bonds_made, makeBond.new_connections
   
 def timer(func):
@@ -142,6 +144,7 @@ while bonds_made < n_desired_bonds:
   if return_code:
     print 'Equilibration failed',loop;  sys.exit()
   
+mask_radius = 0 # all unused epoxys need to closed at once
 polymerise(close_unused_epoxy, n_possible_bonds, 'equilibrated.data')
 
 return_code = subprocess.call(lammps_args + [lammps_dir+'in.minimize'])

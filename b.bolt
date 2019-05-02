@@ -6,13 +6,13 @@
 #
 # bolt is written by EPCC (http://www.epcc.ed.ac.uk)
 ##PBS -q long
-#PBS -q short
+##PBS -q short
 #PBS -r y
 #PBS -l select=4
 #PBS -N polymerise_test
 #PBS -A e283-sinclair
 ##PBS -J 0-29
-#PBS -l walltime=0:20:0
+#PBS -l walltime=1:00:0
 export PBS_O_WORKDIR=$(readlink -f $PBS_O_WORKDIR)
 
 # Switch to current working directory
@@ -25,4 +25,5 @@ module load pc-numpy
 rm polyout nx.dat new_connections.json
 
 python polymerise.py 96 reactants.data vdw.json
+#python polymerise.py 96 compressed.data vdw.json
 
