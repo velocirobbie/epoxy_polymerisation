@@ -17,7 +17,8 @@ python polymerisation.py n_cores inputfile
 
 n_cores = int(sys.argv[1])
 inputfile = str(sys.argv[2])
-vdw_defs = str(sys.argv[3])
+n_possible_bonds = int(sys.argv[3]) # if 100% crosslinking was achieved
+vdw_defs = str(sys.argv[4])
 
 lammps_args = ['aprun', '-n', str(n_cores), 'lmp_xc30', '-in'] # default archer mpi archer args
 
@@ -29,7 +30,6 @@ close_unused_epoxy = json.load(open('configs/epoxy_close.json'))
 
 compress = True # do you want to run a lammps compression before crosslinking
 
-n_possible_bonds = 400 # if 100% crosslinking was achieved
 crosslink_density = 0.80 # desired crosslink density
 n_desired_bonds  = int(n_possible_bonds * crosslink_density) # desired number of crosslink bonds
 
