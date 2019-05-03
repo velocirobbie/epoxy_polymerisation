@@ -23,13 +23,13 @@ thermo          100
 thermo_style    multi
 
 min_style       sd
-#minimize        1.0e-7 1.0e-11 1000   500   
+minimize        1.0e-7 1.0e-11 1000   500   
 reset_timestep 0
 
 dump 1 all atom         5000 dump.lammpstrj
 
 thermo          100
-thermo_style    custom step cpu temp press pe ke evdwl ecoul epair lx ly lz vol pxx pyy pzz pxy pxz pyz
+thermo_style    custom step cpu temp press pe ke evdwl ecoul epair lx ly lz vol  v_mylength density
 thermo_modify   flush yes line multi format float %g format 3 %15.8g ######
 
 timestep 	1
@@ -42,7 +42,7 @@ fix     1 all npt temp 300.0 300.0 100.0 iso 1.0 1.0 1000.0
 variable boxlength equal "lx"
 fix     avlength all   ave/time 10 1000 10000 v_boxlength
 variable mylength   equal "f_avlength"
-thermo_style    custom step cpu temp press pe ke evdwl ecoul epair lx ly lz vol pxx pyy pzz pxy pxz pyz v_mylength
+thermo_style    custom step cpu temp press pe ke evdwl ecoul epair lx ly lz vol  v_mylength density
 thermo_modify   flush yes line multi format float %g format 3 %15.8g ######
 thermo 10000
 
