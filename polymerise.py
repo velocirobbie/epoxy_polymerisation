@@ -85,7 +85,9 @@ def loop_polymerise(reaction, bonds_made):
   # crosslinks a file called 'to_be_crosslinked.data' as much as possible according to 
   # specifiaction; outputs 'reacted.data'
   assert(os.path.isfile('to_be_crosslinked.data'))
-
+  if bonds_made >= n_desired_bonds: 
+    subprocess.call(['mv','to_be_crosslinked.data','reacted.data'])
+    
   while bonds_made < n_desired_bonds:
     diff = n_desired_bonds - bonds_made
     if diff < bonds_per_loop:
