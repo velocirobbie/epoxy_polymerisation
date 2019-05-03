@@ -26,6 +26,38 @@ class MakeBond(object):
             self.new_connections = {'angles':{},'dihedrals':{}}
         self.opls = OPLS_Reader('forcefield/oplsaa.prm')
 
+        # calculate NxM distance**2 matrix between types a and b
+        all1_indexes, all1_ids, xyz1 = self.find_all_atoms_with_type(self.a1)
+        all2_indexes, all2_ids, xyz2 = self.find_all_atoms_with_type(self.a2)
+        if len(xyz1) == 0 or len(xyz2) == 0: raise Exception # no possible bonds left to make
+        print 'type1: ',len(xyz1),' type2: ',len(xyz2)
+        distances = self.calc_distance_matrix(xyz1,xyz2)
+        distances_flat = np.ndarray.flatten(distances)
+
+        # map sorted distnaces to atoms that represent that distance
+        """index_of_sorted_dists = []
+        for flat_index in index_of_sorted_flat_dist:
+            i = int(flat_index / len(xyz2))
+            j = int(flat_index - len(xyz2)*i)
+            index_of_sorted_dists += [ [i,j] ]
+            if distances_flat[flat_index] != distances[i,j]:
+              print flat_index, i,j, distances_flat[flat_index], distances[i,j]
+              i,j = np.where( distances == distances_flat[flat_index] )
+              print i,j , distances[i,j]
+              raise Exception
+        i = index_of_sorted_dists[0][0]
+        j = index_of_sorted_dists[0][1]
+        print i,j
+        print distances[i,j]"""
+
+        index_of_sorted_flat_dist = np.argsort(distances_flat)
+        row_of_sorted_dists = index_of_sorted_flat_dist / len(xyz2)
+        col_of_sorted_dists = index_of_sorted_flat_dist - len(xyz2)*row_of_sorted_dists
+
+        distances_flat.sort()
+        
+        search_dists_from_index = 0
+
         searching = True
         count = 0
         coords_of_bonds_made = np.empty((0,3))
@@ -37,35 +69,39 @@ class MakeBond(object):
             for i in range(len(sim.ids)):
                 self.ids2index[sim.ids[i]] = i
 
-            # calculate NxM distance**2 matrix between types a and b
-            all1, xyz1 = self.find_all_atoms_with_type(self.a1)
-            all2, xyz2 = self.find_all_atoms_with_type(self.a2)
-            if len(all1) == 0 or len(all2) == 0: break # no possible bonds left to make
-            print 'type1: ',len(all1),' type2: ',len(all2)
-            distances = self.calc_distance_matrix(xyz1,xyz2)
-            distances_flat = np.ndarray.flatten(distances)
-            distances_flat.sort()
+            # reset mapping from distance matrix to atom index
+            for i in range(len(xyz1)):
+                all1_indexes[i] = self.ids2index[all1_ids[i]]
+            for i in range(len(xyz2)):
+                all2_indexes[i] = self.ids2index[all2_ids[i]]
 
             found = False
-            for i,dist in enumerate(distances_flat):
+            for dist_index in range(search_dists_from_index, len(xyz1)): 
+                dist = distances_flat[dist_index]
                 if dist > self.r2: break # all possible bonds are now too far apart
                 print 'dist: ',np.sqrt(dist)
-                i,j = np.where( distances == dist )
+                i = row_of_sorted_dists[dist_index]
+                j = col_of_sorted_dists[dist_index]
+                print i,j, distances[i,j]
+                #i,j = index_of_sorted_dists[dist_index]
+                #i,j = np.where( distances == dist )
+                print xyz1[i],xyz2[j], coords_of_bonds_made
                 i_distances = self.calc_distance_matrix(xyz1[i], coords_of_bonds_made)
                 j_distances = self.calc_distance_matrix(xyz2[j], coords_of_bonds_made)
 
                 if (   np.all(i_distances > mask_radius**2) 
                     or np.all(j_distances > mask_radius**2)):
                     found = True
+                    search_dists_from_index = dist_index + 1
                     break
                 else:
-                    print 'nearby: ', np.sqrt(i_distances.min())
+                    print 'failed, nearby bond: ', np.sqrt(i_distances.min())
                     #if np.sum(mask) == 0: break # all possible bonds have been checked
     
             if found:
-                a,b = all1[int(i)], all2[int(j)]
+                a,b = all1_indexes[int(i)], all2_indexes[int(j)]
                 if (self.sim.atom_labels[a] != self.a1 and
-                        self.sim.atom_labels[b] != self.b1): raise Exception
+                        self.sim.atom_labels[b] != self.a2): raise Exception
                 #print sim.atom_labels[a], sim.atom_labels[b], a,b 
                 #print sim.molecules[a], sim.molecules[b]
                 #print self.find_neighbours(a), self.find_neighbours(b)
@@ -314,11 +350,13 @@ class MakeBond(object):
         return x*x + y*y + z*z
 
     def find_all_atoms_with_type(self, label):
-        atoms = []
+        atom_indexes = []
+        atom_ids = []
         xyz   = []
         for i in range(len(self.sim.atom_labels)):
             if self.sim.atom_labels[i] == label:
-                atoms += [i]
+                atom_indexes += [i]
+                atom_ids += [self.sim.ids[i]]
                 xyz   += [self.sim.coords[i]]
-        return np.array(atoms), np.array(xyz)
+        return np.array(atom_indexes), np.array(atom_ids), np.array(xyz)
 
