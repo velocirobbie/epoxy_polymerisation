@@ -80,12 +80,8 @@ class MakeBond(object):
                 dist = distances_flat[dist_index]
                 if dist > self.r2: break # all possible bonds are now too far apart
                 print 'dist: ',np.sqrt(dist)
-                i = row_of_sorted_dists[dist_index]
-                j = col_of_sorted_dists[dist_index]
-                print i,j, distances[i,j]
-                #i,j = index_of_sorted_dists[dist_index]
-                #i,j = np.where( distances == dist )
-                print xyz1[i],xyz2[j], coords_of_bonds_made
+                i = np.array( [row_of_sorted_dists[dist_index]] )
+                j = np.array( [col_of_sorted_dists[dist_index]] )
                 i_distances = self.calc_distance_matrix(xyz1[i], coords_of_bonds_made)
                 j_distances = self.calc_distance_matrix(xyz2[j], coords_of_bonds_made)
 
