@@ -31,33 +31,18 @@ class MakeBond(object):
         all2_indexes, all2_ids, xyz2 = self.find_all_atoms_with_type(self.a2)
         if len(xyz1) == 0 or len(xyz2) == 0: raise Exception # no possible bonds left to make
         print 'type1: ',len(xyz1),' type2: ',len(xyz2)
+
         distances = self.calc_distance_matrix(xyz1,xyz2)
         distances_flat = np.ndarray.flatten(distances)
 
         # map sorted distnaces to atoms that represent that distance
-        """index_of_sorted_dists = []
-        for flat_index in index_of_sorted_flat_dist:
-            i = int(flat_index / len(xyz2))
-            j = int(flat_index - len(xyz2)*i)
-            index_of_sorted_dists += [ [i,j] ]
-            if distances_flat[flat_index] != distances[i,j]:
-              print flat_index, i,j, distances_flat[flat_index], distances[i,j]
-              i,j = np.where( distances == distances_flat[flat_index] )
-              print i,j , distances[i,j]
-              raise Exception
-        i = index_of_sorted_dists[0][0]
-        j = index_of_sorted_dists[0][1]
-        print i,j
-        print distances[i,j]"""
-
         index_of_sorted_flat_dist = np.argsort(distances_flat)
         row_of_sorted_dists = index_of_sorted_flat_dist / len(xyz2)
         col_of_sorted_dists = index_of_sorted_flat_dist - len(xyz2)*row_of_sorted_dists
 
         distances_flat.sort()
-        
-        search_dists_from_index = 0
 
+        dist_index = -1 # initalise for loop, doing a range() was much slower
         searching = True
         count = 0
         coords_of_bonds_made = np.empty((0,3))
@@ -76,7 +61,8 @@ class MakeBond(object):
                 all2_indexes[i] = self.ids2index[all2_ids[i]]
 
             found = False
-            for dist_index in range(search_dists_from_index, len(distances_flat)): 
+            while True:
+                dist_index += 1
                 dist = distances_flat[dist_index]
                 if dist > self.r2: break # all possible bonds are now too far apart
                 print 'dist: ',np.sqrt(dist)
@@ -92,15 +78,11 @@ class MakeBond(object):
                     break
                 else:
                     print 'failed, nearby bond: ', np.sqrt(i_distances.min())
-                    #if np.sum(mask) == 0: break # all possible bonds have been checked
     
             if found:
                 a,b = all1_indexes[int(i)], all2_indexes[int(j)]
                 if (self.sim.atom_labels[a] != self.a1 and
                         self.sim.atom_labels[b] != self.a2): raise Exception
-                #print sim.atom_labels[a], sim.atom_labels[b], a,b 
-                #print sim.molecules[a], sim.molecules[b]
-                #print self.find_neighbours(a), self.find_neighbours(b)
 
                 self.make_bond(self.sim,a,b)
 
