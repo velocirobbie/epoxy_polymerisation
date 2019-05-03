@@ -76,7 +76,7 @@ class MakeBond(object):
                 all2_indexes[i] = self.ids2index[all2_ids[i]]
 
             found = False
-            for dist_index in range(search_dists_from_index, len(xyz1)): 
+            for dist_index in range(search_dists_from_index, len(distances_flat)): 
                 dist = distances_flat[dist_index]
                 if dist > self.r2: break # all possible bonds are now too far apart
                 print 'dist: ',np.sqrt(dist)
