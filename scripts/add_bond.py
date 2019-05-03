@@ -43,24 +43,24 @@ class MakeBond(object):
             if len(all1) == 0 or len(all2) == 0: break # no possible bonds left to make
             print 'type1: ',len(all1),' type2: ',len(all2)
             distances = self.calc_distance_matrix(xyz1,xyz2)
+            distances_flat = np.ndarray.flatten(distances)
+            distances_flat.sort()
 
             found = False
-            mask = np.ones(np.shape(distances), dtype=bool)
-            while not found:
-                min_dist = distances[np.where(mask==True)].min()
-                if min_dist > self.r2: break # all possible bonds are now too far apart
-                print 'dist: ',np.sqrt(min_dist)
-                i,j = np.where( distances == min_dist )
+            for i,dist in enumerate(distances_flat):
+                if dist > self.r2: break # all possible bonds are now too far apart
+                print 'dist: ',np.sqrt(dist)
+                i,j = np.where( distances == dist )
                 i_distances = self.calc_distance_matrix(xyz1[i], coords_of_bonds_made)
                 j_distances = self.calc_distance_matrix(xyz2[j], coords_of_bonds_made)
 
                 if (   np.all(i_distances > mask_radius**2) 
                     or np.all(j_distances > mask_radius**2)):
                     found = True
+                    break
                 else:
-                    mask[i,j] = False
-                    print 'nearby: ', np.sqrt(i_distances.min()), ' ', np.sum(mask)
-                    if np.sum(mask) == 0: break # all possible bonds have been checked
+                    print 'nearby: ', np.sqrt(i_distances.min())
+                    #if np.sum(mask) == 0: break # all possible bonds have been checked
     
             if found:
                 a,b = all1[int(i)], all2[int(j)]
