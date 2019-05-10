@@ -35,8 +35,8 @@ thermo          100
 thermo_style    multi
 
 #min_style       sd
-
 #minimize        1.0e-7 1.0e-11 1000   500   
+#reset_timestep 0
 
 dump 1 all custom       1000 dump.lammpstrj id type xs ys zs mol 
 
@@ -51,9 +51,23 @@ run 10000
 unfix 1
 
 fix     1 all npt temp 300.0 300.0 100.0 iso 1.0 1.0 1000.0
-run 50000
+
+
+variable boxlength equal "lx"
+fix     avlength all   ave/time 10 1000 10000 v_boxlength
+variable mylength   equal "f_avlength"
+thermo_style    custom step cpu temp press pe ke evdwl ecoul epair lx ly lz vol  v_mylength density
+thermo_modify   flush yes line multi format float %g format 3 %15.8g ######
+thermo 10000
+
+run    20000
+
+label runagain
+  variable lastlength equal ${mylength}
+  run 10000
+  variable diff equal "sqrt((v_lastlength - v_mylength)*(v_lastlength - v_mylength))"
+  print "COMPRESS CHECK ${mylength} ${lastlength} ${diff}"
+  if "${diff} > 0.1" then & 
+    "jump lammps_inputs/in.equil runagain" 
 
 write_data equilibrated.data
-
-
-

@@ -29,7 +29,7 @@ reset_timestep 0
 dump 1 all atom         5000 dump.lammpstrj
 
 thermo          100
-thermo_style    custom step cpu temp press pe ke evdwl ecoul epair lx ly lz vol  v_mylength density
+thermo_style    custom step cpu temp press pe ke evdwl ecoul epair lx ly lz vol  density
 thermo_modify   flush yes line multi format float %g format 3 %15.8g ######
 
 timestep 	1

@@ -24,6 +24,6 @@ module load pc-numpy
 
 rm polyout nx.dat new_connections.json
 
-python polymerise.py 192 800reactants.data 3200 vdw.json 
+python polymerise.py 192 3000reactants.data 12000 vdw.json 
 #python polymerise.py 96 compressed.data vdw.json
 

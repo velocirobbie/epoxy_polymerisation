@@ -18,8 +18,8 @@ else:
 #print "'python cross_link_density.py ",datafile
 #os.system('python cross_link_density.py '+datafile) 
 
-n_tetra = 100
-n_amine = 100
+n_tetra = 3000
+n_amine = n_tetra
 
 a1 = 0
 a2 = 0
