@@ -12,7 +12,7 @@
 #PBS -N polymerise_test
 #PBS -A e283-sinclair
 ##PBS -J 0-29
-#PBS -l walltime=4:00:0
+#PBS -l walltime=20:00:0
 export PBS_O_WORKDIR=$(readlink -f $PBS_O_WORKDIR)
 
 # Switch to current working directory

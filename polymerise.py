@@ -33,7 +33,7 @@ compress = True # do you want to run a lammps compression before crosslinking
 crosslink_density = 0.80 # desired crosslink density
 n_desired_bonds  = int(n_possible_bonds * crosslink_density) # desired number of crosslink bonds
 
-bonds_per_loop = 1000
+bonds_per_loop = n_possible_bonds # controlled by mask now
 search_radius = 6
 mask_radius = 20
 
@@ -147,7 +147,9 @@ while bonds_made < n_desired_bonds:
     return_code = subprocess.call(lammps_args + [lammps_dir+'in.equil'])
     if return_code:
       print 'Equilibration failed',loop;  sys.exit()
-  
+  else: 
+    subprocess.call(['mv','reacted.data','equilibrated.data'])
+
 mask_radius = 0 # all unused epoxys need to closed at once
 polymerise(close_unused_epoxy, n_possible_bonds, 'equilibrated.data')
 
