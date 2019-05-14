@@ -50,15 +50,6 @@ def react(sim, reaction_config, n_attempt_bonds, new_connections):
                 mask_radius = mask_radius)
   return makeBond.bonds_made, makeBond.new_connections
   
-def timer(func):
-    start = time.time()
-    def wrapper(*args,**kwargs):
-        return func(*args,**kwargs)
-    end = time.time()
-    print 'Total wall time: ',end-start,'seconds'
-    return wrapper
-
-@timer
 def polymerise(reaction_config, n_attempt_bonds, filename):
   sim = ReadLammpsData(filename)
 
