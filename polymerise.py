@@ -151,6 +151,7 @@ while bonds_made < n_desired_bonds:
     subprocess.call(['mv','reacted.data','equilibrated.data'])
 
 mask_radius = 0 # all unused epoxys need to closed at once
+n_attempt_bonds = n_desired_bonds - bonds_made
 polymerise(close_unused_epoxy, n_possible_bonds, 'equilibrated.data')
 
 return_code = subprocess.call(lammps_args + [lammps_dir+'in.minimize'])

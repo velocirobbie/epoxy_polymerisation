@@ -34,7 +34,7 @@ thermo          100
 
 thermo_style    multi
 
-dump 1 all custom       1000 dump.lammpstrj id type xs ys zs mol 
+#dump 1 all custom       1000 dump.lammpstrj id type xs ys zs mol 
 
 thermo          500
 

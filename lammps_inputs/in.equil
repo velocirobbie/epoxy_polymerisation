@@ -38,7 +38,7 @@ thermo_style    multi
 #minimize        1.0e-7 1.0e-11 1000   500   
 #reset_timestep 0
 
-dump 1 all custom       1000 dump.lammpstrj id type xs ys zs mol 
+#dump 1 all custom       1000 dump.lammpstrj id type xs ys zs mol 
 
 thermo          500
 
