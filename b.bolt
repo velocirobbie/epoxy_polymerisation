@@ -8,7 +8,7 @@
 ##PBS -q long
 ##PBS -q short
 #PBS -r y
-#PBS -l select=8
+#PBS -l select=4
 #PBS -N polymerise_test
 #PBS -A e283-sinclair
 ##PBS -J 0-29
@@ -23,7 +23,7 @@ module load python-compute/2.7.6
 module load pc-numpy
 
 rm polyout nx.dat new_connections.json
+cp master.json vdw.json
 
-python polymerise.py 192 3000reactants.data 12000 vdw.json 
-#python polymerise.py 96 compressed.data vdw.json
+python polymerise.py 96 reactants.data 12000 vdw.json 
 
