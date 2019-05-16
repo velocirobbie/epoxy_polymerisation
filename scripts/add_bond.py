@@ -47,7 +47,7 @@ class MakeBond(object):
         count = 0
         coords_of_bonds_made = np.empty((0,3))
         while searching:
-            print '===new search===='
+            print '===new search==== (',count,')'
             
             # setup mapping from atom ids to array index
             self.ids2index = np.zeros((max(sim.ids+1)),dtype=int)
